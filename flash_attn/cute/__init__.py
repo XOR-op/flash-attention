@@ -6,6 +6,7 @@ import cutlass.cute as cute
 
 from .interface import (
     flash_attn_func,
+    flash_attn_fwd,
     flash_attn_varlen_func,
 )
 
@@ -17,5 +18,6 @@ cute.compile = cute_compile_patched
 
 __all__ = [
     "flash_attn_func",
+    "flash_attn_fwd",
     "flash_attn_varlen_func",
 ]

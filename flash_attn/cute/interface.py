@@ -550,6 +550,34 @@ def _flash_attn_fwd(
 
 _flash_attn_fwd.compile_cache = {}
 
+@torch.library.custom_op("flash_attn::flash_attn_fwd", mutates_args=())
+def flash_attn_fwd(
+    q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
+    softmax_scale: float, causal: bool,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Returns (out, lse)"""
+    return _flash_attn_fwd(
+        q,
+        k,
+        v,
+        softmax_scale=softmax_scale,
+        causal=causal,
+        window_size_left=None,
+        window_size_right=None,
+        learnable_sink=None,
+        softcap=0.0,
+        num_splits=1,
+        pack_gqa=None,
+        mask_mod=None,
+        block_sparse_tensors=None
+    )
+
+@torch.library.register_fake("flash_attn::flash_attn_fwd")
+def flash_attn_fwd_fake(q, k, v, softmax_scale, causal):
+    batch, seqlen_q, nheads, hdim = q.shape
+    hdim_v = v.shape[-1]
+    return q.new_empty(batch, seqlen_q, nheads, hdim_v), \
+           q.new_empty(batch, nheads, seqlen_q, dtype=torch.float32)
 
 def _flash_attn_bwd(
     q: torch.Tensor,
